@@ -47,8 +47,8 @@ class Category:
 
         Description in README.md (as of 09/30/2020):
           A `check_funds` method that accepts an amount as an argument. 
-          It returns `False` if the amount is less than the balance of the 
-          budget category and returns `True` otherwise. This method should be 
+          It returns 'False' if the amount is less than the balance of the 
+          budget category and returns 'True' otherwise. This method should be 
           used by both the `withdraw` method and `transfer` method.
         """
         if amount <= self.balance:
