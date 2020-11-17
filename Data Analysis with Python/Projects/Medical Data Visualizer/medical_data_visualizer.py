@@ -31,9 +31,9 @@ df['gluc'] = df.apply(lambda row: 0 if row.gluc == 1 else 1, axis=1)
 def draw_cat_plot():
     ### Create DataFrame for cat plot using `pd.melt` using just the values from
     ### 'cholesterol', 'gluc', 'smoke', 'alco', 'active', and 'overweight'.
-    df_cat = pd.melt(df,id_vars=["id","cardio"],value_vars=['cholesterol','gluc','smoke','alco','active','overweight'])
-    print(df_cat.head())
-    print()
+    df_cat = pd.melt(df,id_vars=["cardio"],value_vars=['cholesterol','gluc','smoke','alco','active','overweight'])
+    # print(df_cat.head())
+    # print()
 
 
     ### Group and reformat the data to split it by 'cardio'. Show the counts of
@@ -41,20 +41,20 @@ def draw_cat_plot():
     df_cat['total'] = df_cat['value']
     df_cat = df_cat.groupby(['cardio','variable','value']).count()
     df_cat = df_cat.reset_index()
-    df_cat = df_cat.drop(columns=['id'])
-    print(df_cat.head(24))
+    # print(df_cat.head(24))
 
 
 
     ### Draw the catplot with 'sns.catplot()'
     # https://seaborn.pydata.org/generated/seaborn.catplot.html
-    sns.catplot(data=df_cat,
+    bar = sns.catplot(data=df_cat,
                 kind='bar',
                 x='variable',
                 y= 'total',
                 hue='value',
                 col='cardio'
                 )
+    fig = bar.fig
 
 
     ##### Do not modify the next two lines #####
@@ -64,21 +64,56 @@ def draw_cat_plot():
 
 #### Draw Heat Map
 def draw_heat_map():
+    """
+    Clean the data. Filter out the following patient segments that represent incorrect data:
+        diastolic pressure is higher then systolic (Keep the correct data with df['ap_lo'] <= df['ap_hi']))
+        height is less than the 2.5th percentile (Keep the correct data with (df['height'] >= df['height'].quantile(0.025)))
+        height is more than the 97.5th percentile
+        weight is less then the 2.5th percentile
+        weight is more than the 97.5th percentile
+        Create a correlation matrix using the dataset. Plot the correlation matrix using
+        seaborn's heatmap(). Mask the upper triangle. The chart should look like "examples/Figure_2.png".
+    """
+    
+    
+    
     ### Clean the data
-    df_heat = None
+    df_heat = df
+    df_heat.drop(df_heat[df_heat['ap_hi']<df_heat['ap_lo']].index, inplace= True)
+    df_heat.drop(df_heat[df_heat['height']<df_heat['height'].quantile(0.025)].index, inplace= True)
+    df_heat.drop(df_heat[df_heat['height']>df_heat['height'].quantile(0.975)].index, inplace= True)
+    df_heat.drop(df_heat[df_heat['weight']<df_heat['weight'].quantile(0.025)].index, inplace= True)
+    df_heat.drop(df_heat[df_heat['weight']>df_heat['weight'].quantile(0.975)].index, inplace= True)
+    
+    # print(df.head(992))
 
     ### Calculate the correlation matrix
-    corr = None
+    corr = df_heat.corr()
+
 
     ### Generate a mask for the upper triangle
-    mask = None
+    mask = np.zeros(corr.shape)
+    mask[np.triu_indices_from(mask)] = True
 
 
 
     ### Set up the matplotlib figure
-    fig, ax = None
+    SIZE = 8
+    fig, ax = plt.subplots(figsize=(SIZE, SIZE))
 
     ### Draw the heatmap with 'sns.heatmap()'
+    # https://seaborn.pydata.org/generated/seaborn.heatmap.html
+    ax = sns.heatmap(corr,
+                     mask = mask,
+                     vmin=-.16,
+                     vmax=.3,
+                     square = True,
+                     linecolor = 'white',
+                     linewidths=.5,
+                     cbar_kws={'shrink':.5, 'format':'%.2f'},
+                     center=0,
+                     fmt='.1f',
+                     annot=True)
 
 
 
@@ -87,4 +122,5 @@ def draw_heat_map():
     return fig
 
 ######################################################################
-draw_cat_plot()
+# draw_cat_plot()
+draw_heat_map()
