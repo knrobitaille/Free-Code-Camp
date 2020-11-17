@@ -78,12 +78,11 @@ def draw_heat_map():
     
     
     ### Clean the data
-    df_heat = df
-    df_heat.drop(df_heat[df_heat['ap_hi']<df_heat['ap_lo']].index, inplace= True)
-    df_heat.drop(df_heat[df_heat['height']<df_heat['height'].quantile(0.025)].index, inplace= True)
-    df_heat.drop(df_heat[df_heat['height']>df_heat['height'].quantile(0.975)].index, inplace= True)
-    df_heat.drop(df_heat[df_heat['weight']<df_heat['weight'].quantile(0.025)].index, inplace= True)
-    df_heat.drop(df_heat[df_heat['weight']>df_heat['weight'].quantile(0.975)].index, inplace= True)
+    df_heat = df[(df['ap_lo']<=df['ap_hi']) &
+    (df['height'] >= df['height'].quantile(0.025)) &
+    (df['height'] <= df['height'].quantile(0.975)) &
+    (df['weight'] >= df['weight'].quantile(0.025)) &
+    (df['weight'] <= df['weight'].quantile(0.975))]
     
     # print(df.head(992))
 
@@ -92,7 +91,8 @@ def draw_heat_map():
 
 
     ### Generate a mask for the upper triangle
-    mask = np.zeros(corr.shape)
+    #https://stackoverflow.com/questions/53822194/python-generate-a-mask-for-the-lower-triangle-of-a-matrix
+    mask = np.zeros_like(corr, dtype=np.bool).T
     mask[np.triu_indices_from(mask)] = True
 
 
@@ -122,5 +122,12 @@ def draw_heat_map():
     return fig
 
 ######################################################################
-# draw_cat_plot()
+# Testing
+# On Repl.it had to add following code to test module line 48
+    # # check the version of matplotib:
+    # ver = int(mpl.__version__.replace(".", ""))
+    # if ver >= 330:
+        # expected = expected[:-3]
+#####################################################################
+draw_cat_plot()
 draw_heat_map()
